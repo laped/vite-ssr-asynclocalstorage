@@ -4,6 +4,8 @@ import express from 'express'
 import compression from 'compression'
 import { renderPage } from 'vite-plugin-ssr/server'
 import { root } from './root.js'
+import { asyncLocalStore } from '#root/server/asyncLocalStorage'
+
 const isProduction = process.env.NODE_ENV === 'production'
 
 startServer()
@@ -12,6 +14,15 @@ async function startServer() {
   const app = express()
 
   app.use(compression())
+
+  // Middleware to init the AsyncLocalStorage context and propagate to the entire request call chain
+  app.use((_req, _res, next) => {
+    asyncLocalStore.run(new Map(), () => {
+      asyncLocalStore.getStore()?.set("traceId", "Test123");
+
+      next();
+    });
+  });
 
   if (isProduction) {
     const sirv = (await import('sirv')).default
@@ -31,7 +42,11 @@ async function startServer() {
     const pageContextInit = {
       urlOriginal: req.originalUrl
     }
+
+    console.log('nodejs renderPage:before - store: ', asyncLocalStore.getStore());
     const pageContext = await renderPage(pageContextInit)
+    console.log('nodejs renderPage:after - store: ', asyncLocalStore.getStore());
+
     const { httpResponse } = pageContext
     if (!httpResponse) return next()
     const { body, statusCode, contentType, earlyHints } = httpResponse

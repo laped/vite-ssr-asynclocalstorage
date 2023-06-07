@@ -1,8 +1,11 @@
+import { asyncLocalStore } from '#root/server/asyncLocalStorage';
 import { Counter } from './Counter'
 
 export { Page }
 
 function Page() {
+  console.log('index.page - store: ', asyncLocalStore.getStore());
+
   return (
     <>
       <h1>Welcome</h1>
