@@ -7,10 +7,10 @@ import { PageShell } from './PageShell'
 import { escapeInject, dangerouslySkipEscape } from 'vite-plugin-ssr/server'
 import logoUrl from './logo.svg'
 import type { PageContextServer } from './types'
-import { asyncLocalStore } from '#root/server/asyncLocalStorage'
+import { asyncLocalStore, moduleId } from '#root/server/asyncLocalStorage'
 
 async function render(pageContext: PageContextServer) {
-  console.log('_default.page.server - store: ', asyncLocalStore.getStore());
+  console.log('_default.page.server - store: ', asyncLocalStore.getStore(), moduleId);
 
   const { Page, pageProps } = pageContext
   // This render() hook only supports SSR, see https://vite-plugin-ssr.com/render-modes for how to modify render() to support SPA

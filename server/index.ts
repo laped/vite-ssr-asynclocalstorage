@@ -4,7 +4,8 @@ import express from 'express'
 import compression from 'compression'
 import { renderPage } from 'vite-plugin-ssr/server'
 import { root } from './root.js'
-import { asyncLocalStore } from '#root/server/asyncLocalStorage'
+import { asyncLocalStore, moduleId } from '#root/server/asyncLocalStorage'
+import { testModule } from '#root/server/testmodule';
 
 const isProduction = process.env.NODE_ENV === 'production'
 
@@ -23,6 +24,17 @@ async function startServer() {
       next();
     });
   });
+
+  app.get('/testModule', async (req, res, next) => {
+    console.log('nodejs testModule:before - store: ', asyncLocalStore.getStore(), moduleId);
+    const { moduleId: mId, someVal } = await testModule();
+    console.log('nodejs testModule:after - store: ', asyncLocalStore.getStore(), moduleId);
+
+    return res.status(200).json({
+      moduleId: mId,
+      someVal
+    });
+  })
 
   if (isProduction) {
     const sirv = (await import('sirv')).default
@@ -43,9 +55,9 @@ async function startServer() {
       urlOriginal: req.originalUrl
     }
 
-    console.log('nodejs renderPage:before - store: ', asyncLocalStore.getStore());
+    console.log('nodejs renderPage:before - store: ', asyncLocalStore.getStore(), moduleId);
     const pageContext = await renderPage(pageContextInit)
-    console.log('nodejs renderPage:after - store: ', asyncLocalStore.getStore());
+    console.log('nodejs renderPage:after - store: ', asyncLocalStore.getStore(), moduleId);
 
     const { httpResponse } = pageContext
     if (!httpResponse) return next()
